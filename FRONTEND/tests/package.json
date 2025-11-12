@@ -1,0 +1,20 @@
+{
+  "name": "sgpa-tests",
+  "version": "1.0.0",
+  "description": "Testes automatizados com Selenium para SGPA",
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-modules test-runner.js",
+    "test:login": "node --experimental-modules tests/login.test.js",
+    "test:dashboard": "node --experimental-modules tests/dashboard.test.js",
+    "test:alunos": "node --experimental-modules tests/alunos.test.js",
+    "test:all": "node --experimental-modules test-runner.js"
+  },
+  "dependencies": {
+    "selenium-webdriver": "^4.16.0",
+    "chromedriver": "^119.0.1"
+  },
+  "devDependencies": {
+    "@types/selenium-webdriver": "^4.1.20"
+  }
+}
