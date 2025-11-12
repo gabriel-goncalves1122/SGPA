@@ -1,16 +1,10 @@
 import admin from "firebase-admin";
-import dotenv from "dotenv";
+import path from "path";
 
-dotenv.config();
+const serviceAccount = path.resolve(__dirname, "sgpa-63419-firebase-adminsdk-fbsvc-ed34d9d0d5.json");
 
-const serviceAccount = JSON.parse(
-  process.env.FIREBASE_SERVICE_ACCOUNT as string
-);
-
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
-}
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
 export default admin;
