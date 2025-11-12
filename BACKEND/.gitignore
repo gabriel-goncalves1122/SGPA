@@ -22,3 +22,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Firebase Admin key
+sgpa-63419-firebase-adminsdk-fbsvc-ed34d9d0d5.json

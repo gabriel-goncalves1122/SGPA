@@ -1,29 +1,26 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import admin from "./config/firebase";
 import authRoutes from "./routes/authRoutes";
-import alunoRoutes from "./routes/alunoRoutes"; 
-
-dotenv.config();
+import alunoRoutes from "./routes/alunoRoutes"; // 👈 adicionamos aqui
 
 const app = express();
 
-//  Middlewares
 app.use(
   cors({
-    origin: "http://localhost:5173", // frontend local
+    origin: "http://localhost:5173",
     credentials: true,
   })
 );
 
 app.use(express.json());
 
-//  Rotas
+// Rotas
 app.use("/auth", authRoutes);
-app.use("/alunos", alunoRoutes); 
+app.use("/alunos", alunoRoutes); // 👈 adicionamos aqui
 
-//  Rota de teste para verificar conexão com Firebase
+// Rota principal de teste
 app.get("/", async (_, res) => {
   try {
     const projectId = admin.app().options.projectId;
@@ -32,6 +29,7 @@ app.get("/", async (_, res) => {
       firebaseProject: projectId,
     });
   } catch (error) {
+    console.error("Erro ao conectar com Firebase:", error);
     res.status(500).json({ error: "Erro ao conectar com Firebase" });
   }
 });

@@ -1,104 +1,54 @@
-// src/controllers/alunoController.ts
-// src/controllers/alunoController.ts
 import type { Request, Response } from "express";
-import admin from "../config/firebase";
-import { type Aluno, AlunoValidator } from "../models/Aluno";
+import * as admin from "firebase-admin";
 
 const db = admin.firestore();
-const alunosRef = db.collection("alunos");
+const alunosCollection = db.collection("alunos");
 
-export const incluirAluno = async (req: Request, res: Response) => {
+// 🔹 Listar todos os alunos
+export const getAlunos = async (req: Request, res: Response) => {
   try {
-    const aluno = req.body as Aluno;
-
-    // validação
-    const errors = AlunoValidator.validate(aluno);
-    if (errors.length > 0) return res.status(400).json({ errors });
-
-    // preparar documento (usar Timestamp do Firestore)
-    const novoAluno = {
-      nome: aluno.nome,
-      matricula: aluno.matricula,
-      email: aluno.email,
-      curso: aluno.curso,
-      telefone: aluno.telefone,
-      createdAt: admin.firestore.Timestamp.now(),
-      updatedAt: admin.firestore.Timestamp.now(),
-    };
-
-    const docRef = await alunosRef.add(novoAluno);
-    const docSnapshot = await docRef.get();
-
-    return res.status(201).json({ id: docRef.id, ...(docSnapshot.data() as object) });
+    const snapshot = await alunosCollection.get();
+    const alunos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.status(200).json(alunos);
   } catch (error) {
-    console.error("Erro incluirAluno:", error);
-    return res.status(500).json({ error: "Erro ao incluir aluno" });
+    res.status(500).json({ error: "Erro ao buscar alunos" });
   }
 };
 
-export const alterarAluno = async (req: Request, res: Response) => {
+// 🔹 Adicionar aluno
+export const addAluno = async (req: Request, res: Response) => {
   try {
-    const id = req.params.id;
-    const dados = req.body as Partial<Aluno>;
-
-    const docRef = alunosRef.doc(id);
-    const doc = await docRef.get();
-    if (!doc.exists) return res.status(404).json({ error: "Aluno não encontrado" });
-
-    // opcional: validar campos que vieram (se quiser validar tudo, chame AlunoValidator com união)
-    if (dados.email || dados.nome || dados.matricula || dados.curso || dados.telefone) {
-      // se quiser validar obrigatoriedade, monte um objeto de validação parcial ou apenas permita atualização parcial
-      // aqui assumimos validação simples: se vierem campos, ok. Se precisar, aplicar regras mais rígidas.
-    }
-
-    const atualizado = {
-      ...dados,
-      updatedAt: admin.firestore.Timestamp.now(),
-    };
-
-    await docRef.update(atualizado);
-    const updatedSnapshot = await docRef.get();
-    return res.json({ id: docRef.id, ...(updatedSnapshot.data() as object) });
+    const novoAluno = req.body;
+    const docRef = await alunosCollection.add({
+      ...novoAluno,
+      createdAt: new Date(),
+    });
+    res.status(201).json({ id: docRef.id, ...novoAluno });
   } catch (error) {
-    console.error("Erro alterarAluno:", error);
-    return res.status(500).json({ error: "Erro ao alterar aluno" });
+    res.status(500).json({ error: "Erro ao adicionar aluno" });
   }
 };
 
-export const consultarAlunos = async (_req: Request, res: Response) => {
+// 🔹 Atualizar aluno
+export const updateAluno = async (req: Request, res: Response) => {
   try {
-    const snapshot = await alunosRef.get();
-    const alunos = snapshot.docs.map((d) => ({ id: d.id, ...(d.data() as object) }));
-    return res.json(alunos);
+    const { id } = req.params;
+    const novosDados = req.body;
+
+    await alunosCollection.doc(id).update(novosDados);
+    res.status(200).json({ id, ...novosDados });
   } catch (error) {
-    console.error("Erro consultarAlunos:", error);
-    return res.status(500).json({ error: "Erro ao consultar alunos" });
+    res.status(500).json({ error: "Erro ao atualizar aluno" });
   }
 };
 
-export const consultarAlunoPorId = async (req: Request, res: Response) => {
+// 🔹 Excluir aluno
+export const deleteAluno = async (req: Request, res: Response) => {
   try {
-    const id = req.params.id;
-    const doc = await alunosRef.doc(id).get();
-    if (!doc.exists) return res.status(404).json({ error: "Aluno não encontrado" });
-    return res.json({ id: doc.id, ...(doc.data() as object) });
+    const { id } = req.params;
+    await alunosCollection.doc(id).delete();
+    res.status(200).json({ message: `Aluno ${id} excluído com sucesso` });
   } catch (error) {
-    console.error("Erro consultarAlunoPorId:", error);
-    return res.status(500).json({ error: "Erro ao consultar aluno" });
-  }
-};
-
-export const excluirAluno = async (req: Request, res: Response) => {
-  try {
-    const id = req.params.id;
-    const docRef = alunosRef.doc(id);
-    const doc = await docRef.get();
-    if (!doc.exists) return res.status(404).json({ error: "Aluno não encontrado" });
-
-    await docRef.delete();
-    return res.json({ message: "Aluno excluído com sucesso" });
-  } catch (error) {
-    console.error("Erro excluirAluno:", error);
-    return res.status(500).json({ error: "Erro ao excluir aluno" });
+    res.status(500).json({ error: "Erro ao excluir aluno" });
   }
 };

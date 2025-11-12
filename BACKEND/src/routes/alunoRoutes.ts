@@ -1,20 +1,16 @@
-// src/routes/alunoRoutes.ts
 import express from "express";
 import {
-  incluirAluno,
-  alterarAluno,
-  consultarAlunos,
-  consultarAlunoPorId,
-  excluirAluno,
+  getAlunos,
+  addAluno,
+  updateAluno,
+  deleteAluno,
 } from "../controllers/alunoController";
 
 const router = express.Router();
 
-// Cria /alunos
-router.post("/", incluirAluno);        // Incluir (RF01)
-router.get("/", consultarAlunos);      // Consultar todos (RF03)
-router.get("/:id", consultarAlunoPorId); // Consultar por id (RF03 - individual)
-router.put("/:id", alterarAluno);      // Alterar (RF02)
-router.delete("/:id", excluirAluno);   // Excluir (RF04)
+router.get("/", getAlunos);       // Listar
+router.post("/", addAluno);       // Adicionar
+router.put("/:id", updateAluno);  // Alterar
+router.delete("/:id", deleteAluno); // Excluir
 
 export default router;
