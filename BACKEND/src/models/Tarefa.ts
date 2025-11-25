@@ -3,6 +3,7 @@ export type StatusTarefa = "Pendente" | "Em andamento" | "Concluída";
 export interface Tarefa {
   descricao?: string;
   responsavel: string; // id do aluno
+  idProjeto?: string; // opcional: vinculação ao projeto
   dataInicio?: any;
   dataFim?: any;
   status?: StatusTarefa;
@@ -22,6 +23,10 @@ export class TarefaValidator {
 
     if (!payload.responsavel || typeof payload.responsavel !== "string") {
       errors.push("Responsável (id do aluno) é obrigatório");
+    }
+
+    if (payload.idProjeto && typeof payload.idProjeto !== "string") {
+      errors.push("idProjeto inválido");
     }
 
     // datas
