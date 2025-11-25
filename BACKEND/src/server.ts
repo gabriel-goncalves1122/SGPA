@@ -8,6 +8,7 @@ import professorRoutes from "./routes/professorRoutes";
 import projetoRoutes from "./routes/projetoRoutes";
 import equipesRoutes from "./routes/equipesRoutes";
 import tarefaRoutes from "./routes/tarefaRoutes";
+import entregaRoutes from "./routes/entregaRoutes";
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use("/professores", professorRoutes);
 app.use("/projetos", projetoRoutes);
 app.use("/equipes", equipesRoutes);
 app.use("/tarefas", tarefaRoutes);
+app.use("/entregas", entregaRoutes);
 
 // Rota principal de teste
 app.get("/", async (_, res) => {
