@@ -145,6 +145,19 @@ export const deleteProjeto = async (req: Request, res: Response) => {
     const doc = await docRef.get();
     if (!doc.exists) return res.status(404).json({ error: "Projeto não encontrado" });
 
+    // remover vínculos relacionados ao projeto
+    const vinculosSnapshot = await db.collection("vinculos").where("idProjeto", "==", id).get();
+    const batch = db.batch();
+    vinculosSnapshot.docs.forEach((d) => {
+      // remover aluno do array do projeto (defensivo)
+      // também registramos exclusão do vinculo
+      batch.delete(d.ref);
+    });
+
+    // aplicar batch de remoção de vínculos
+    if (vinculosSnapshot.size > 0) await batch.commit();
+
+    // finalmente, excluir o projeto
     await docRef.delete();
     res.status(200).json({ message: `Projeto ${id} excluído com sucesso` });
   } catch (error) {
