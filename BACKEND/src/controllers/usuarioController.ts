@@ -1,13 +1,14 @@
 import type { Request, Response } from "express";
 import admin from "../config/firebase";
 import { UsuarioValidator } from "../models/Usuario";
+import type { TipoUsuario } from "../models/Usuario";
 
 const db = admin.firestore();
 const usuariosCollection = db.collection("usuarios");
 
 export const addUsuario = async (req: Request, res: Response) => {
   try {
-    const { nome, email, senha, tipo } = req.body as { nome: string; email: string; senha: string; tipo: string };
+    const { nome, email, senha, tipo } = req.body as { nome: string; email: string; senha: string; tipo: TipoUsuario };
 
     const errors = UsuarioValidator.validate({ nome, email, tipo, senha });
     if (errors.length > 0) return res.status(400).json({ errors });
