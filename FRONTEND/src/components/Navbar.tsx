@@ -34,13 +34,37 @@ const Navbar = () => {
           className={`nav-link ${isActive("/alunos")}`}
           onClick={() => navigate("/alunos")}
         >
-          📋 Alunos (Tabela)
+          👨‍🎓 Alunos
         </button>
         <button
-          className={`nav-link ${isActive("/alunos/cards")}`}
-          onClick={() => navigate("/alunos/cards")}
+          className={`nav-link ${isActive("/professores")}`}
+          onClick={() => navigate("/professores")}
         >
-          🎴 Alunos (Cards)
+          👨‍🏫 Professores
+        </button>
+        <button
+          className={`nav-link ${isActive("/projetos")}`}
+          onClick={() => navigate("/projetos")}
+        >
+          📁 Projetos
+        </button>
+        <button
+          className={`nav-link ${isActive("/tarefas")}`}
+          onClick={() => navigate("/tarefas")}
+        >
+          ✅ Tarefas
+        </button>
+        <button
+          className={`nav-link ${isActive("/entregas")}`}
+          onClick={() => navigate("/entregas")}
+        >
+          📤 Entregas
+        </button>
+        <button
+          className={`nav-link ${isActive("/relatorios")}`}
+          onClick={() => navigate("/relatorios")}
+        >
+          📊 Relatórios
         </button>
       </div>
 
