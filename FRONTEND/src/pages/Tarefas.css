@@ -1,0 +1,129 @@
+.tarefas-container {
+  padding: 2rem;
+}
+
+.tarefas-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.tarefas-header h1 {
+  font-size: 2rem;
+  color: #333;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.filter-select {
+  padding: 0.75rem 1rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: white;
+  cursor: pointer;
+}
+
+.tarefas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.tarefa-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  border-left: 4px solid #007bff;
+}
+
+.tarefa-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.tarefa-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-badge.pendente {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.em-andamento {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.status-badge.concluída {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.tarefa-descricao {
+  color: #333;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+  font-size: 1.05rem;
+  min-height: 3rem;
+}
+
+.tarefa-info {
+  margin-bottom: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.info-item {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.info-item strong {
+  color: #212529;
+}
+
+.tarefa-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tarefa-actions button {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.no-data {
+  text-align: center;
+  padding: 3rem;
+  color: #999;
+  background: white;
+  border-radius: 8px;
+  grid-column: 1 / -1;
+}
