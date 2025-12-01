@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 sgpa-63419-firebase-adminsdk-fbsvc-ed34d9d0d5.json
 .env
+
+
+BACKEND/src/config/serviceAccountKey.json

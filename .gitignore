@@ -54,3 +54,4 @@ screenshots/
 .cache/
 temp/
 tmp/
+BACKEND/src/config/serviceAccountKey.json
