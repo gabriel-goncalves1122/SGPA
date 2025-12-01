@@ -8,8 +8,11 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "seed": "ts-node BACKEND/src/scripts/seed.ts",
+    "seed:admin": "tsx src/scripts/seed-admin.ts",
     "test:firebase": "tsx src/scripts/test-firebase.ts",
     "create:test-user": "tsx src/scripts/create-test-user.ts",
+    "create:admin": "tsx src/scripts/create-admin.ts",
+    "test:rf13": "tsx src/scripts/test-rf13.ts",
     "lint": "eslint ."
   },
   "keywords": [],
