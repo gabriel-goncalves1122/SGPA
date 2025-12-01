@@ -23,3 +23,4 @@ dist-ssr
 *.sln
 *.sw?
 sgpa-63419-firebase-adminsdk-fbsvc-ed34d9d0d5.json
+.env
