@@ -1,3 +1,4 @@
+// controllers/professorController.ts
 import type { Request, Response } from "express";
 import * as admin from "firebase-admin";
 import type { Professor } from "../models/Professor";
@@ -10,7 +11,10 @@ const professoresCollection = db.collection("professores");
 export const getProfessores = async (_req: Request, res: Response) => {
   try {
     const snapshot = await professoresCollection.get();
-    const professores = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const professores = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
     res.status(200).json(professores);
   } catch (error) {
     console.error("Erro ao buscar professores:", error);
@@ -18,7 +22,7 @@ export const getProfessores = async (_req: Request, res: Response) => {
   }
 };
 
-// Obter professor por id
+// Obter professor por ID
 export const getProfessorById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -33,26 +37,52 @@ export const getProfessorById = async (req: Request, res: Response) => {
   }
 };
 
-// Adicionar professor (verifica siape único)
+// Buscar professores por nome (exato, case-sensitive)
+export const getByName = async (req: Request, res: Response) => {
+  try {
+    const { nome } = req.params;
+
+    if (!nome) {
+      return res.status(400).json({ error: "Parâmetro 'nome' é obrigatório" });
+    }
+
+    const snapshot = await professoresCollection
+      .where("nome", "==", nome)
+      .get();
+
+    const professores = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.status(200).json(professores);
+  } catch (error) {
+    console.error("Erro ao buscar professor por nome:", error);
+    res.status(500).json({ error: "Erro ao buscar professor por nome" });
+  }
+};
+
+// Adicionar professor (com validação e SIAPE único)
 export const addProfessor = async (req: Request, res: Response) => {
   try {
     const novoProfessor: Professor = req.body;
 
-    // Validação de dados
     const errors = ProfessorValidator.validate(novoProfessor);
     if (errors.length > 0) {
       return res.status(400).json({ errors });
     }
 
-    // Verificar siape único
-    const siapeQuery = await professoresCollection.where("siape", "==", novoProfessor.siape).get();
+    const siapeQuery = await professoresCollection
+      .where("siape", "==", novoProfessor.siape)
+      .get();
+
     if (!siapeQuery.empty) {
       return res.status(409).json({ error: "SIAPE já cadastrado" });
     }
 
     const docRef = await professoresCollection.add({
       ...novoProfessor,
-      createdAt: new Date(),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
     res.status(201).json({ id: docRef.id, ...novoProfessor });
@@ -62,7 +92,7 @@ export const addProfessor = async (req: Request, res: Response) => {
   }
 };
 
-// Atualizar professor (verifica siape único quando alterado)
+// Atualizar professor
 export const updateProfessor = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -70,27 +100,30 @@ export const updateProfessor = async (req: Request, res: Response) => {
 
     const docRef = professoresCollection.doc(id);
     const doc = await docRef.get();
+
     if (!doc.exists) {
       return res.status(404).json({ error: "Professor não encontrado" });
     }
 
     const existing = doc.data() as Professor;
 
-    // Se siape for alterado, checar unicidade
-    if (novosDados.siape && novosDados.siape !== existing.siape) {
-      const siapeQuery = await professoresCollection.where("siape", "==", novosDados.siape).get();
-      // se encontrou algum e não é o próprio documento
-      if (!siapeQuery.empty) {
-        const conflict = siapeQuery.docs.some((d) => d.id !== id);
-        if (conflict) {
-          return res.status(409).json({ error: "SIAPE já cadastrado por outro professor" });
-        }
+    // Verificar unicidade do SIAPE, se alterado
+    if (novosDados.siape !== undefined && novosDados.siape !== existing.siape) {
+      const siapeQuery = await professoresCollection
+        .where("siape", "==", novosDados.siape)
+        .get();
+
+      const conflict = siapeQuery.docs.some((d) => d.id !== id);
+      if (conflict) {
+        return res
+          .status(409)
+          .json({ error: "SIAPE já cadastrado por outro professor" });
       }
     }
 
     await docRef.update({
       ...novosDados,
-      updatedAt: new Date(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
     res.status(200).json({ id, ...existing, ...novosDados });
@@ -106,6 +139,7 @@ export const deleteProfessor = async (req: Request, res: Response) => {
     const { id } = req.params;
     const docRef = professoresCollection.doc(id);
     const doc = await docRef.get();
+
     if (!doc.exists) {
       return res.status(404).json({ error: "Professor não encontrado" });
     }

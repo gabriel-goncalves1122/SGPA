@@ -17,7 +17,10 @@ export const professorService = {
     return response.data;
   },
 
-  update: async (id: string, professor: Partial<Professor>): Promise<Professor> => {
+  update: async (
+    id: string,
+    professor: Partial<Professor>
+  ): Promise<Professor> => {
     const response = await api.put(`/professores/${id}`, professor);
     return response.data;
   },
@@ -25,4 +28,16 @@ export const professorService = {
   delete: async (id: string): Promise<void> => {
     await api.delete(`/professores/${id}`);
   },
+
+  getByName: async (nome: string): Promise<Professor[]> => {
+    const response = await api.get(
+      `/professores/nome/${encodeURIComponent(nome)}`
+    );
+    return response.data;
+  },
+};
+
+export const getProfessorNome = (id: string): string => {
+  const prof = professores.find((p) => p.id === id);
+  return prof ? prof.nome : "Desconhecido";
 };

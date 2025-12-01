@@ -5,6 +5,8 @@ import { alunoService } from "../services/alunoService";
 import type { Tarefa, StatusTarefa } from "../types/tarefa";
 import type { Projeto } from "../types/projeto";
 import type { Aluno } from "../types/aluno";
+import { professorService } from "../services/professorService";
+import type { Professor } from "../types/professor";
 import Layout from "../components/Layout";
 import "./Tarefas.css";
 
@@ -16,9 +18,11 @@ export default function Tarefas() {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("Todos");
+  const [professores, setProfessores] = useState<Professor[]>([]);
   const [formData, setFormData] = useState<Omit<Tarefa, "id">>({
     descricao: "",
-    responsavel: "",
+    responsaveis: [], // agora é array
+    orientador: "", // novo campo (pode ser string vazia ou null)
     idProjeto: "",
     dataInicio: new Date(),
     dataFim: undefined,
@@ -32,20 +36,28 @@ export default function Tarefas() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [tarefasData, projetosData, alunosData] = await Promise.all([
-        tarefaService.getAll(),
-        projetoService.getAll(),
-        alunoService.getAll(),
-      ]);
+      const [tarefasData, projetosData, alunosData, professorData] =
+        await Promise.all([
+          tarefaService.getAll(),
+          projetoService.getAll(),
+          alunoService.getAll(),
+          professorService.getAll(),
+        ]);
       setTarefas(tarefasData);
       setProjetos(projetosData);
       setAlunos(alunosData);
+      setProfessores(professorData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
       alert("Erro ao carregar dados");
     } finally {
       setLoading(false);
     }
+  };
+
+  const getProfessorNome = (id: string): string => {
+    const prof = professores.find((p) => p.id === id);
+    return prof ? prof.nome : "Desconhecido";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,12 +82,15 @@ export default function Tarefas() {
   const handleEdit = (tarefa: Tarefa) => {
     setEditingId(tarefa.id || null);
     setFormData({
-      descricao: tarefa.descricao,
-      responsavel: tarefa.responsavel,
-      idProjeto: tarefa.idProjeto,
+      descricao: tarefa.descricao || "",
+      responsaveis: Array.isArray(tarefa.responsaveis)
+        ? tarefa.responsaveis
+        : [],
+      orientador: tarefa.orientador || "",
+      idProjeto: tarefa.idProjeto || "",
       dataInicio: tarefa.dataInicio,
       dataFim: tarefa.dataFim,
-      status: tarefa.status,
+      status: tarefa.status || "Pendente",
     });
     setShowModal(true);
   };
@@ -95,7 +110,8 @@ export default function Tarefas() {
   const resetForm = () => {
     setFormData({
       descricao: "",
-      responsavel: "",
+      responsaveis: [], // ← array vazio de strings
+      orientador: "", // ou undefined, mas string vazia é mais fácil no select
       idProjeto: "",
       dataInicio: new Date(),
       dataFim: undefined,
@@ -119,10 +135,21 @@ export default function Tarefas() {
     const aluno = alunos.find((a) => a.id === id);
     return aluno ? aluno.nome : "Desconhecido";
   };
-
-  const formatDate = (date: any) => {
+  const formatDate = (date: any): string => {
     if (!date) return "";
+
+    // Se já for string no formato YYYY-MM-DD, retorna direto
+    if (typeof date === "string" && /^\d{4}-\d{2}-\d{2}/.test(date)) {
+      return date;
+    }
+
     const d = new Date(date);
+    // Verifica se a data é válida
+    if (isNaN(d.getTime())) {
+      console.warn("Data inválida recebida:", date);
+      return "";
+    }
+
     return d.toISOString().split("T")[0];
   };
 
@@ -169,17 +196,35 @@ export default function Tarefas() {
               filteredTarefas.map((tarefa) => (
                 <div key={tarefa.id} className="tarefa-card">
                   <div className="tarefa-header">
-                    <span className={`status-badge ${tarefa.status?.toLowerCase().replace(" ", "-")}`}>
+                    <span
+                      className={`status-badge ${tarefa.status
+                        ?.toLowerCase()
+                        .replace(" ", "-")}`}
+                    >
                       {tarefa.status}
                     </span>
                   </div>
                   <p className="tarefa-descricao">{tarefa.descricao}</p>
                   <div className="tarefa-info">
                     <div className="info-item">
-                      <strong>Responsável:</strong> {getAlunoNome(tarefa.responsavel)}
+                      <strong>Responsáveis:</strong>
+                      {tarefa.responsaveis && tarefa.responsaveis.length > 0
+                        ? tarefa.responsaveis
+                            .map((id) => getAlunoNome(id))
+                            .join(", ")
+                        : "Nenhum"}
                     </div>
+
+                    {tarefa.orientador && (
+                      <div className="info-item">
+                        <strong>Orientador:</strong>{" "}
+                        {getProfessorNome(tarefa.orientador)}
+                      </div>
+                    )}
+
                     <div className="info-item">
-                      <strong>Projeto:</strong> {getProjetoNome(tarefa.idProjeto)}
+                      <strong>Projeto:</strong>{" "}
+                      {getProjetoNome(tarefa.idProjeto)}
                     </div>
                     {tarefa.dataInicio && (
                       <div className="info-item">
@@ -193,10 +238,16 @@ export default function Tarefas() {
                     )}
                   </div>
                   <div className="tarefa-actions">
-                    <button className="btn-edit" onClick={() => handleEdit(tarefa)}>
+                    <button
+                      className="btn-edit"
+                      onClick={() => handleEdit(tarefa)}
+                    >
                       Editar
                     </button>
-                    <button className="btn-delete" onClick={() => handleDelete(tarefa.id!)}>
+                    <button
+                      className="btn-delete"
+                      onClick={() => handleDelete(tarefa.id!)}
+                    >
                       Excluir
                     </button>
                   </div>
@@ -209,42 +260,113 @@ export default function Tarefas() {
         {showModal && (
           <div className="modal-overlay" onClick={handleCloseModal}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <h2>{editingId ? "Editar Tarefa" : "Nova Tarefa"}</h2>
-              <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                  <label>Descrição *</label>
+              <div className="modal-header">
+                <h2>{editingId ? "Editar Tarefa" : "Nova Tarefa"}</h2>
+                <button className="close-btn" onClick={handleCloseModal}>
+                  &times;
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="modal-form">
+                {/* Descrição */}
+                <div className="form-row">
+                  <label htmlFor="descricao">Descrição *</label>
                   <textarea
+                    id="descricao"
                     value={formData.descricao}
-                    onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, descricao: e.target.value })
+                    }
                     required
                     maxLength={200}
                     rows={3}
+                    placeholder="Descreva a tarefa brevemente..."
                   />
+                  <small className="char-count">
+                    {formData.descricao?.length || 0}/200
+                  </small>
                 </div>
 
-                <div className="form-group">
-                  <label>Responsável *</label>
-                  <select
-                    value={formData.responsavel}
-                    onChange={(e) => setFormData({ ...formData, responsavel: e.target.value })}
-                    required
-                  >
-                    <option value="">Selecione um aluno</option>
+                {/* Responsáveis */}
+                <div className="form-row">
+                  <label>Responsáveis *</label>
+                  <div className="checkbox-group">
                     {alunos.map((aluno) => (
-                      <option key={aluno.id} value={aluno.id}>
-                        {aluno.nome}
+                      <label key={aluno.id} className="checkbox-item">
+                        <input
+                          type="checkbox"
+                          value={aluno.id ?? ""}
+                          checked={
+                            aluno.id
+                              ? formData.responsaveis.includes(aluno.id)
+                              : false
+                          }
+                          onChange={(e) => {
+                            const { value, checked } = e.target;
+                            setFormData((prev) => {
+                              if (checked) {
+                                return {
+                                  ...prev,
+                                  responsaveis: [...prev.responsaveis, value],
+                                };
+                              } else {
+                                return {
+                                  ...prev,
+                                  responsaveis: prev.responsaveis.filter(
+                                    (id) => id !== value
+                                  ),
+                                };
+                              }
+                            });
+                          }}
+                        />
+                        <span>{aluno.nome}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {formData.responsaveis.length === 0 && (
+                    <small className="error-text">
+                      Selecione pelo menos um responsável
+                    </small>
+                  )}
+                </div>
+
+                {/* Orientador */}
+                <div className="form-row">
+                  <label htmlFor="orientador">Orientador</label>
+                  <select
+                    id="orientador"
+                    value={formData.orientador ?? ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        orientador: e.target.value || undefined,
+                      })
+                    }
+                  >
+                    <option value="">Nenhum</option>
+                    {professores.map((prof) => (
+                      <option key={prof.id} value={prof.id}>
+                        {prof.nome}
                       </option>
                     ))}
                   </select>
                 </div>
 
-                <div className="form-group">
-                  <label>Projeto</label>
+                {/* Projeto */}
+                <div className="form-row">
+                  <label htmlFor="projeto">Projeto</label>
                   <select
-                    value={formData.idProjeto}
-                    onChange={(e) => setFormData({ ...formData, idProjeto: e.target.value })}
+                    id="projeto"
+                    value={formData.idProjeto || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        idProjeto: e.target.value || undefined,
+                      })
+                    }
                   >
-                    <option value="">Sem projeto</option>
+                    <option value="">Nenhum</option>
                     {projetos.map((proj) => (
                       <option key={proj.id} value={proj.id}>
                         {proj.titulo}
@@ -253,40 +375,59 @@ export default function Tarefas() {
                   </select>
                 </div>
 
-                <div className="form-group">
-                  <label>Data de Início</label>
-                  <input
-                    type="date"
-                    value={formData.dataInicio ? formatDate(formData.dataInicio) : ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        dataInicio: e.target.value ? new Date(e.target.value) : undefined,
-                      })
-                    }
-                  />
+                {/* Datas */}
+                <div className="form-row date-group">
+                  <div className="date-field">
+                    <label htmlFor="dataInicio">Data de Início</label>
+                    <input
+                      id="dataInicio"
+                      type="date"
+                      value={
+                        formData.dataInicio
+                          ? formatDate(formData.dataInicio)
+                          : ""
+                      }
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          dataInicio: e.target.value
+                            ? new Date(e.target.value)
+                            : undefined,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="date-field">
+                    <label htmlFor="dataFim">Data de Fim</label>
+                    <input
+                      id="dataFim"
+                      type="date"
+                      value={
+                        formData.dataFim ? formatDate(formData.dataFim) : ""
+                      }
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          dataFim: e.target.value
+                            ? new Date(e.target.value)
+                            : undefined,
+                        })
+                      }
+                    />
+                  </div>
                 </div>
 
-                <div className="form-group">
-                  <label>Data de Fim</label>
-                  <input
-                    type="date"
-                    value={formData.dataFim ? formatDate(formData.dataFim) : ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        dataFim: e.target.value ? new Date(e.target.value) : undefined,
-                      })
-                    }
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Status *</label>
+                {/* Status */}
+                <div className="form-row">
+                  <label htmlFor="status">Status *</label>
                   <select
+                    id="status"
                     value={formData.status}
                     onChange={(e) =>
-                      setFormData({ ...formData, status: e.target.value as StatusTarefa })
+                      setFormData({
+                        ...formData,
+                        status: e.target.value as StatusTarefa,
+                      })
                     }
                     required
                   >
@@ -296,8 +437,13 @@ export default function Tarefas() {
                   </select>
                 </div>
 
+                {/* Ações */}
                 <div className="modal-actions">
-                  <button type="button" onClick={handleCloseModal}>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={handleCloseModal}
+                  >
                     Cancelar
                   </button>
                   <button type="submit" className="btn-primary">

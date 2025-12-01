@@ -1,4 +1,4 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
 import admin from "./config/firebase";
@@ -11,6 +11,8 @@ import tarefaRoutes from "./routes/tarefaRoutes";
 import entregaRoutes from "./routes/entregaRoutes";
 import usuarioRoutes from "./routes/usuarioRoutes";
 import relatorioRoutes from "./routes/relatorioRoutes";
+
+dotenv.config();
 
 const app = express();
 
