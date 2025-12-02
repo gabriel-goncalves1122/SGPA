@@ -44,8 +44,8 @@ export default function TarefasProjetoModal({
       const novaTarefa = {
         descricao: descricao.trim(),
         responsaveis,
-        orientador: projeto.orientador,
-        idProjeto: projeto.id!,
+        orientador: projeto.orientador, // ✅ do projeto pai
+        idProjeto: projeto.id!, // ✅ do projeto pai
         dataInicio: new Date(),
         status,
       };

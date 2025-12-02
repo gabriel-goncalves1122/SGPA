@@ -92,14 +92,19 @@ export const addTarefa = async (req: Request, res: Response) => {
   try {
     const payload = req.body as Partial<Tarefa>;
 
-    // converter datas se vierem como string
-    if (payload.dataInicio)
-      payload.dataInicio = new Date(payload.dataInicio as any) as any;
-    if (payload.dataFim)
-      payload.dataFim = new Date(payload.dataFim as any) as any;
+    const dataInicio = parseDate(payload.dataInicio);
+    const dataFim = parseDate(payload.dataFim);
 
-    const errors = TarefaValidator.validate(payload);
-    if (errors.length > 0) return res.status(400).json({ errors });
+    const payloadValidacao = {
+      ...payload,
+      dataInicio,
+      dataFim,
+    };
+
+    const errors = TarefaValidator.validate(payloadValidacao);
+    if (errors.length > 0) {
+      return res.status(400).json({ errors });
+    }
 
     const responsaveis = payload.responsaveis as string[];
     if (!Array.isArray(responsaveis) || responsaveis.length === 0) {
@@ -108,18 +113,24 @@ export const addTarefa = async (req: Request, res: Response) => {
         .json({ error: "Pelo menos um responsável é necessário" });
     }
 
-    const tarefa: Partial<Tarefa> = {
+    // ✅ Construa o objeto SEM campos undefined
+    const tarefa: any = {
       descricao: payload.descricao as string,
-      responsaveis: payload.responsaveis as string[],
-      dataInicio: parseDate(payload.dataInicio),
-      dataFim: parseDate(payload.dataFim),
+      responsaveis: responsaveis,
+      orientador: payload.orientador as string,
+      idProjeto: payload.idProjeto as string,
+      dataInicio: dataInicio!,
       status: (payload.status as any) || "Pendente",
       createdAt: new Date(),
     };
 
-    const docRef = await tarefasCollection.add(tarefa as any);
+    // ✅ Só adicione dataFim se for válida
+    if (dataFim) {
+      tarefa.dataFim = dataFim;
+    }
 
-    // se já estiver concluída, gerar log de progresso
+    const docRef = await tarefasCollection.add(tarefa);
+
     if (tarefa.status === "Concluída") {
       await progressoCollection.add({
         tarefaId: docRef.id,
@@ -130,8 +141,10 @@ export const addTarefa = async (req: Request, res: Response) => {
     }
 
     res.status(201).json({ id: docRef.id, ...tarefa });
-  } catch (error) {
-    console.error("Erro ao adicionar tarefa:", error);
+  } catch (error: any) {
+    console.error("🔥 Erro ao adicionar tarefa:");
+    console.error("Mensagem:", error.message);
+    console.error("Stack:", error.stack);
     res.status(500).json({ error: "Erro ao adicionar tarefa" });
   }
 };
