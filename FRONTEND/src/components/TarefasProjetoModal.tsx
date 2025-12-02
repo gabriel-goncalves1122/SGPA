@@ -1,7 +1,7 @@
 // components/TarefasProjetoModal.tsx
 import React, { useState } from "react";
 import { tarefaService } from "../services/tarefaService";
-import type { Tarefa } from "../types/tarefa";
+import type { Tarefa, StatusTarefa } from "../types/tarefa";
 import type { Aluno } from "../types/aluno";
 import type { Projeto } from "../types/projeto";
 import "./TarefasProjetoModal.css";
@@ -12,7 +12,7 @@ interface TarefasProjetoModalProps {
   isVisible: boolean;
   onClose: () => void;
   onTarefaCriada: () => void;
-  alunosDoProjeto: Aluno[]; // 👈 novos alunos filtrados
+  alunosDoProjeto: Aluno[];
 }
 
 export default function TarefasProjetoModal({
@@ -26,9 +26,25 @@ export default function TarefasProjetoModal({
   const [showForm, setShowForm] = useState(false);
   const [descricao, setDescricao] = useState("");
   const [responsaveis, setResponsaveis] = useState<string[]>([]);
-  const [status, setStatus] = useState<
-    "Pendente" | "Em andamento" | "Concluída"
-  >("Pendente");
+  const [status, setStatus] = useState<StatusTarefa>("Pendente");
+
+  const [tarefaEmEdicao, setTarefaEmEdicao] = useState<Tarefa | null>(null);
+  const [novoStatus, setNovoStatus] = useState<StatusTarefa>("Pendente");
+
+  // ✅ Função MOVIDA para o nível do componente
+  const handleSalvarStatus = async () => {
+    if (!tarefaEmEdicao) return;
+
+    try {
+      await tarefaService.update(tarefaEmEdicao.id!, { status: novoStatus });
+      alert("✅ Status atualizado!");
+      onTarefaCriada(); // recarrega as tarefas
+      setTarefaEmEdicao(null);
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error);
+      alert("❌ Erro ao atualizar status");
+    }
+  };
 
   const handleCriarTarefa = async () => {
     if (!descricao.trim()) {
@@ -44,16 +60,15 @@ export default function TarefasProjetoModal({
       const novaTarefa = {
         descricao: descricao.trim(),
         responsaveis,
-        orientador: projeto.orientador, // ✅ do projeto pai
-        idProjeto: projeto.id!, // ✅ do projeto pai
+        orientador: projeto.orientador,
+        idProjeto: projeto.id!,
         dataInicio: new Date(),
         status,
       };
 
       await tarefaService.create(novaTarefa);
       alert("✅ Tarefa criada com sucesso!");
-      onTarefaCriada(); // recarrega as tarefas
-      // Resetar formulário
+      onTarefaCriada();
       setDescricao("");
       setResponsaveis([]);
       setStatus("Pendente");
@@ -83,7 +98,6 @@ export default function TarefasProjetoModal({
         </div>
 
         <div className="modal-body">
-          {/* Botão para abrir formulário */}
           {!showForm && (
             <button
               className="btn-primary btn-add-tarefa"
@@ -93,10 +107,10 @@ export default function TarefasProjetoModal({
             </button>
           )}
 
-          {/* Formulário de criação */}
           {showForm && (
             <div className="tarefa-form">
               <h3>Nova Tarefa</h3>
+              {/* ... campos do formulário ... */}
               <div className="form-row">
                 <label>Descrição *</label>
                 <textarea
@@ -138,7 +152,7 @@ export default function TarefasProjetoModal({
                 <label>Status</label>
                 <select
                   value={status}
-                  onChange={(e) => setStatus(e.target.value as any)}
+                  onChange={(e) => setStatus(e.target.value as StatusTarefa)}
                 >
                   <option value="Pendente">Pendente</option>
                   <option value="Em andamento">Em andamento</option>
@@ -165,7 +179,6 @@ export default function TarefasProjetoModal({
             </div>
           )}
 
-          {/* Lista de tarefas */}
           {tarefas.length === 0 && !showForm ? (
             <p>Nenhuma tarefa cadastrada para este projeto.</p>
           ) : (
@@ -184,13 +197,25 @@ export default function TarefasProjetoModal({
                     <td>{tarefa.descricao || "Sem descrição"}</td>
                     <td>{tarefa.responsaveis?.length || 0}</td>
                     <td>
-                      <span
-                        className={`status-badge ${
-                          tarefa.status?.toLowerCase() || "pendente"
-                        }`}
-                      >
-                        {tarefa.status || "Pendente"}
-                      </span>
+                      <div className="status-inline">
+                        <span
+                          className={`status-badge ${
+                            tarefa.status?.toLowerCase() || "pendente"
+                          }`}
+                        >
+                          {tarefa.status || "Pendente"}
+                        </span>
+                        <button
+                          className="btn-edit-status"
+                          onClick={() => {
+                            setTarefaEmEdicao(tarefa);
+                            setNovoStatus(tarefa.status || "Pendente");
+                          }}
+                          title="Editar status"
+                        >
+                          ✏️
+                        </button>
+                      </div>
                     </td>
                     <td>{formatDate(tarefa.dataInicio)}</td>
                   </tr>
@@ -199,6 +224,47 @@ export default function TarefasProjetoModal({
             </table>
           )}
         </div>
+
+        {/* ✅ Modal de edição de status FORA da tabela */}
+        {tarefaEmEdicao && (
+          <div
+            className="modal-overlay"
+            onClick={() => setTarefaEmEdicao(null)}
+          >
+            <div
+              className="modal-content pequeno"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3>Editar Status da Tarefa</h3>
+              <div className="form-row">
+                <label>
+                  Status atual: {tarefaEmEdicao.status || "Pendente"}
+                </label>
+                <select
+                  value={novoStatus}
+                  onChange={(e) =>
+                    setNovoStatus(e.target.value as StatusTarefa)
+                  }
+                >
+                  <option value="Pendente">Pendente</option>
+                  <option value="Em andamento">Em andamento</option>
+                  <option value="Concluída">Concluída</option>
+                </select>
+              </div>
+              <div className="form-actions">
+                <button
+                  className="btn-secondary"
+                  onClick={() => setTarefaEmEdicao(null)}
+                >
+                  Cancelar
+                </button>
+                <button className="btn-primary" onClick={handleSalvarStatus}>
+                  Salvar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

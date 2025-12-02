@@ -1,6 +1,6 @@
 import { runLoginTests } from "./tests/login.test.js";
 import { runDashboardTests } from "./tests/dashboard.test.js";
-import { runAlunosTests } from "./tests/alunos.test.js";
+import { runPessoasTests } from "./tests/pessoas.test.js";
 import { runProjetosTests } from "./tests/projetos.test.js";
 import { runTarefasTests } from "./tests/tarefas.test.js";
 import { logTest } from "./utils/helpers.js";
@@ -37,10 +37,10 @@ async function runAllTests() {
   // Aguardar um pouco entre suites
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
-  // Executar testes de alunos
-  const alunosResults = await runAlunosTests();
-  totalPassed += alunosResults.passed;
-  totalFailed += alunosResults.failed;
+  // Executar testes de pessoas
+  const pessoasResults = await runPessoasTests();
+  totalPassed += pessoasResults.passed;
+  totalFailed += pessoasResults.failed;
 
   // Aguardar e executar testes de projetos
   await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -92,10 +92,10 @@ async function runAllTests() {
     "info"
   );
   logTest(
-    `│  Alunos (CRUD)                  ${String(alunosResults.passed).padStart(
+    `│  Pessoas (CRUD)                 ${String(pessoasResults.passed).padStart(
       2
-    )}        ${String(alunosResults.failed).padStart(2)}       ${String(
-      alunosResults.passed + alunosResults.failed
+    )}        ${String(pessoasResults.failed).padStart(2)}       ${String(
+      pessoasResults.passed + pessoasResults.failed
     ).padStart(2)}  │`,
     "info"
   );

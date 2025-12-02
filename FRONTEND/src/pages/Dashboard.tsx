@@ -222,10 +222,10 @@ const Dashboard = () => {
         {/* Acesso rápido */}
         <div className="quick-access-grid">
           <QuickAccessCard
-            title="Gerenciar Alunos"
+            title="Gerenciar Pessoas"
             description="Visualizar e editar alunos em tabela"
             icon="📋"
-            onClick={() => navigate("/alunos")}
+            onClick={() => navigate("/pessoas")}
           />
         </div>
       </div>

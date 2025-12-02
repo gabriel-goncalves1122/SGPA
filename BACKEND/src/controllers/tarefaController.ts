@@ -151,40 +151,56 @@ export const addTarefa = async (req: Request, res: Response) => {
 
 export const updateTarefa = async (req: Request, res: Response) => {
   try {
-    const payload = req.body as Partial<Tarefa>;
-
-    const tarefa: Partial<Tarefa> = {
-      descricao: payload.descricao as string,
-      responsaveis: payload.responsaveis as string[],
-      dataInicio: parseDate(payload.dataInicio),
-      dataFim: parseDate(payload.dataFim),
-      status: (payload.status as any) || "Pendente",
-      createdAt: new Date(),
-    };
     const { id } = req.params;
-    const novosDados = req.body as Partial<Tarefa>;
+    const payload = req.body as Partial<Tarefa>;
 
     const docRef = tarefasCollection.doc(id);
     const doc = await docRef.get();
-    if (!doc.exists)
+    if (!doc.exists) {
       return res.status(404).json({ error: "Tarefa não encontrada" });
+    }
 
     const existing = doc.data() as Tarefa;
 
-    // converter datas
-    if (novosDados.dataInicio)
-      novosDados.dataInicio = new Date(novosDados.dataInicio as any) as any;
-    if (novosDados.dataFim)
-      novosDados.dataFim = new Date(novosDados.dataFim as any) as any;
+    // Converter datas
+    const dataInicio = parseDate(payload.dataInicio);
+    const dataFim = parseDate(payload.dataFim);
 
-    const merged = { ...existing, ...novosDados } as Partial<Tarefa>;
+    const merged = {
+      ...existing,
+      ...payload,
+      dataInicio,
+      dataFim,
+    };
+
     const errors = TarefaValidator.validate(merged);
-    if (errors.length > 0) return res.status(400).json({ errors });
+    if (errors.length > 0) {
+      return res.status(400).json({ errors });
+    }
 
-    await docRef.update({ ...novosDados, updatedAt: new Date() } as any);
+    // ✅ Preparar dados de atualização SEM undefined
+    const updateData: any = {
+      descricao: merged.descricao,
+      responsaveis: merged.responsaveis,
+      orientador: merged.orientador,
+      idProjeto: merged.idProjeto,
+      dataInicio: merged.dataInicio,
+      dataFim: merged.dataFim,
+      status: merged.status,
+      updatedAt: new Date(),
+    };
 
-    // se status foi alterado para Concluída, gerar log
-    if (novosDados.status === "Concluída" && existing.status !== "Concluída") {
+    // ✅ Remover campos undefined
+    Object.keys(updateData).forEach((key) => {
+      if (updateData[key] === undefined) {
+        delete updateData[key];
+      }
+    });
+
+    await docRef.update(updateData);
+
+    // Log de progresso
+    if (payload.status === "Concluída" && existing.status !== "Concluída") {
       await progressoCollection.add({
         tarefaId: id,
         data: new Date(),
@@ -193,7 +209,7 @@ export const updateTarefa = async (req: Request, res: Response) => {
       });
     }
 
-    res.status(200).json({ id, ...existing, ...novosDados });
+    res.status(200).json({ id, ...merged });
   } catch (error) {
     console.error("Erro ao atualizar tarefa:", error);
     res.status(500).json({ error: "Erro ao atualizar tarefa" });

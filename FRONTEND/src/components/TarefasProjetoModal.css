@@ -166,3 +166,35 @@
   justify-content: flex-end;
   margin-top: 1rem;
 }
+
+.status-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-edit-status {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #4361ee;
+  padding: 0.2rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.btn-edit-status:hover {
+  background: #eef2ff;
+}
+
+/* Modal pequeno */
+.modal-content.pequeno {
+  max-width: 400px;
+  padding: 1.5rem;
+}
+.form-actions {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
