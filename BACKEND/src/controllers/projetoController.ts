@@ -7,39 +7,64 @@ const db = admin.firestore();
 const projetosCollection = db.collection("projetos");
 const professoresCollection = db.collection("professores");
 
+const safeToDate = (val: any): Date | undefined => {
+  if (!val) return undefined;
+  if (val.toDate && typeof val.toDate === "function") {
+    return val.toDate(); // Firestore Timestamp
+  }
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? undefined : d;
+};
+
 // Listar projetos com filtros (titulo, orientador, status) ordenado por dataInicio desc
 export const getProjetos = async (req: Request, res: Response) => {
   try {
     const { titulo, orientador, status } = req.query;
 
     const snapshot = await projetosCollection.get();
-    let projetos = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Projeto[];
+    const projetos = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        titulo: data.titulo || "",
+        descricao: data.descricao || undefined,
+        orientador: data.orientador || "",
+        dataInicio: safeToDate(data.dataInicio),
+        dataFim: safeToDate(data.dataFim),
+        status: (data.status as string) || "planejado",
+        alunos: Array.isArray(data.alunos) ? data.alunos : [],
+      };
+    });
 
-    // filtros simples (titulo parcial, orientador exact, status exact)
+    // Filtros
+    let resultado = projetos;
+
     if (titulo && typeof titulo === "string") {
       const t = titulo.toLowerCase();
-      projetos = projetos.filter((p) => (p.titulo || "").toLowerCase().includes(t));
+      resultado = resultado.filter((p) => p.titulo.toLowerCase().includes(t));
     }
     if (orientador && typeof orientador === "string") {
-      projetos = projetos.filter((p) => p.orientador === orientador);
+      resultado = resultado.filter((p) => p.orientador === orientador);
     }
     if (status && typeof status === "string") {
-      projetos = projetos.filter((p) => (p.status || "").toLowerCase() === status.toLowerCase());
+      resultado = resultado.filter(
+        (p) => p.status?.toLowerCase() === status.toLowerCase()
+      );
     }
 
-    // ordenar por dataInicio desc
-    projetos.sort((a, b) => {
-      const da = a.dataInicio ? new Date(a.dataInicio as any).getTime() : 0;
-      const dbt = b.dataInicio ? new Date(b.dataInicio as any).getTime() : 0;
+    // Ordenar por dataInicio (desc)
+    resultado.sort((a, b) => {
+      const da = a.dataInicio ? a.dataInicio.getTime() : 0;
+      const dbt = b.dataInicio ? b.dataInicio.getTime() : 0;
       return dbt - da;
     });
 
-    // montar retorno com campos solicitados: titulo, orientador, numero de alunos, status, prazo (dataFim)
-    const result = projetos.map((p) => ({
+    // Retorno final
+    const result = resultado.map((p) => ({
       id: p.id,
       titulo: p.titulo,
       orientador: p.orientador,
-      numeroAlunos: Array.isArray(p.alunos) ? p.alunos.length : 0,
+      numeroAlunos: p.alunos.length,
       status: p.status || null,
       dataInicio: p.dataInicio || null,
       dataFim: p.dataFim || null,
@@ -52,13 +77,31 @@ export const getProjetos = async (req: Request, res: Response) => {
   }
 };
 
-// Obter projeto por id
+// Obter projeto por ID
 export const getProjetoById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const doc = await projetosCollection.doc(id).get();
-    if (!doc.exists) return res.status(404).json({ error: "Projeto não encontrado" });
-    res.status(200).json({ id: doc.id, ...doc.data() });
+    if (!doc.exists) {
+      return res.status(404).json({ error: "Projeto não encontrado" });
+    }
+
+    const data = doc.data()!; // ✅ Agora seguro
+
+    const projeto: Projeto = {
+      id: doc.id,
+      titulo: data.titulo || "",
+      descricao: data.descricao || undefined,
+      orientador: data.orientador || "",
+      dataInicio: safeToDate(data.dataInicio)!,
+      dataFim: safeToDate(data.dataFim),
+      status: (data.status as string) || "planejado",
+      alunos: Array.isArray(data.alunos) ? data.alunos : [],
+      createdAt: safeToDate(data.createdAt),
+      updatedAt: safeToDate(data.updatedAt),
+    };
+
+    res.status(200).json(projeto);
   } catch (error) {
     console.error("Erro ao buscar projeto:", error);
     res.status(500).json({ error: "Erro ao buscar projeto" });
@@ -70,29 +113,44 @@ export const addProjeto = async (req: Request, res: Response) => {
   try {
     const payload = req.body as Partial<Projeto>;
 
-    // converter datas se vierem como string
-    if (payload.dataInicio) payload.dataInicio = new Date(payload.dataInicio as any) as any;
-    if (payload.dataFim) payload.dataFim = new Date(payload.dataFim as any) as any;
+    // ✅ Converter datas com segurança
+    const dataInicio = safeToDate(payload.dataInicio);
+    const dataFim = safeToDate(payload.dataFim);
 
-    const errors = ProjetoValidator.validate(payload);
-    if (errors.length > 0) return res.status(400).json({ errors });
+    // Forçar uso das datas convertidas no objeto validado
+    const payloadValidacao = {
+      ...payload,
+      dataInicio,
+      dataFim,
+    };
 
-    // verificar orientador existe
-    const orientadorDoc = await professoresCollection.doc(payload.orientador as string).get();
-    if (!orientadorDoc.exists) return res.status(400).json({ error: "Orientador (professor) não encontrado" });
+    const errors = ProjetoValidator.validate(payloadValidacao);
+    if (errors.length > 0) {
+      return res.status(400).json({ errors });
+    }
+
+    // Verificar orientador
+    const orientadorDoc = await professoresCollection
+      .doc(payload.orientador as string)
+      .get();
+    if (!orientadorDoc.exists) {
+      return res
+        .status(400)
+        .json({ error: "Orientador (professor) não encontrado" });
+    }
 
     const projeto: Partial<Projeto> = {
       titulo: payload.titulo as string,
-      descricao: payload.descricao || undefined,
+      descricao: payload.descricao,
       orientador: payload.orientador as string,
-      dataInicio: payload.dataInicio as any,
-      dataFim: payload.dataFim as any || undefined,
+      dataInicio: dataInicio!, // já validado como não nulo
+      dataFim: dataFim,
       status: payload.status || "planejado",
       alunos: payload.alunos || [],
       createdAt: new Date(),
     };
 
-    const docRef = await projetosCollection.add(projeto as any);
+    const docRef = await projetosCollection.add(projeto);
     res.status(201).json({ id: docRef.id, ...projeto });
   } catch (error) {
     console.error("Erro ao adicionar projeto:", error);
@@ -108,56 +166,74 @@ export const updateProjeto = async (req: Request, res: Response) => {
 
     const docRef = projetosCollection.doc(id);
     const doc = await docRef.get();
-    if (!doc.exists) return res.status(404).json({ error: "Projeto não encontrado" });
+    if (!doc.exists) {
+      return res.status(404).json({ error: "Projeto não encontrado" });
+    }
 
     const existing = doc.data() as Projeto;
 
-    // proteger campos não alteráveis
+    // Proteger campos imutáveis
     if (novosDados.titulo && novosDados.titulo !== existing.titulo) {
       return res.status(400).json({ error: "Título não pode ser alterado" });
     }
-    if (novosDados.orientador && novosDados.orientador !== existing.orientador) {
-      return res.status(400).json({ error: "Orientador não pode ser alterado" });
+    if (
+      novosDados.orientador &&
+      novosDados.orientador !== existing.orientador
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Orientador não pode ser alterado" });
     }
 
-    // converter datas
-    if (novosDados.dataInicio) novosDados.dataInicio = new Date(novosDados.dataInicio as any) as any;
-    if (novosDados.dataFim) novosDados.dataFim = new Date(novosDados.dataFim as any) as any;
+    // ✅ Converter datas com segurança
+    const dataInicio = safeToDate(novosDados.dataInicio);
+    const dataFim = safeToDate(novosDados.dataFim);
 
-    // validar (mesmas regras de RF06)
-    const merged = { ...existing, ...novosDados } as Partial<Projeto>;
+    const merged = {
+      ...existing,
+      ...novosDados,
+      dataInicio,
+      dataFim,
+    };
+
     const errors = ProjetoValidator.validate(merged);
-    if (errors.length > 0) return res.status(400).json({ errors });
+    if (errors.length > 0) {
+      return res.status(400).json({ errors });
+    }
 
-    await docRef.update({ ...novosDados, updatedAt: new Date() } as any);
-    res.status(200).json({ id, ...existing, ...novosDados });
+    await docRef.update({
+      ...novosDados,
+      dataInicio,
+      dataFim,
+      updatedAt: new Date(),
+    });
+
+    res.status(200).json({ id, ...merged });
   } catch (error) {
     console.error("Erro ao atualizar projeto:", error);
     res.status(500).json({ error: "Erro ao atualizar projeto" });
   }
 };
 
-// Excluir projeto (opcional)
+// Excluir projeto
 export const deleteProjeto = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const docRef = projetosCollection.doc(id);
     const doc = await docRef.get();
-    if (!doc.exists) return res.status(404).json({ error: "Projeto não encontrado" });
+    if (!doc.exists) {
+      return res.status(404).json({ error: "Projeto não encontrado" });
+    }
 
-    // remover vínculos relacionados ao projeto
-    const vinculosSnapshot = await db.collection("vinculos").where("idProjeto", "==", id).get();
+    // Remover vínculos associados
+    const vinculosSnapshot = await db
+      .collection("vinculos")
+      .where("idProjeto", "==", id)
+      .get();
     const batch = db.batch();
-    vinculosSnapshot.docs.forEach((d) => {
-      // remover aluno do array do projeto (defensivo)
-      // também registramos exclusão do vinculo
-      batch.delete(d.ref);
-    });
+    vinculosSnapshot.docs.forEach((d) => batch.delete(d.ref));
+    if (!vinculosSnapshot.empty) await batch.commit();
 
-    // aplicar batch de remoção de vínculos
-    if (vinculosSnapshot.size > 0) await batch.commit();
-
-    // finalmente, excluir o projeto
     await docRef.delete();
     res.status(200).json({ message: `Projeto ${id} excluído com sucesso` });
   } catch (error) {

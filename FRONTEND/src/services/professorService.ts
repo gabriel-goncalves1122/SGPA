@@ -36,8 +36,3 @@ export const professorService = {
     return response.data;
   },
 };
-
-export const getProfessorNome = (id: string): string => {
-  const prof = professores.find((p) => p.id === id);
-  return prof ? prof.nome : "Desconhecido";
-};

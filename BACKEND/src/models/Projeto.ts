@@ -27,8 +27,14 @@ export class ProjetoValidator {
       errors.push("Orientador (id do professor) é obrigatório");
     }
 
+    // Em ProjetoValidator
     if (!projeto.dataInicio) {
       errors.push("Data de início é obrigatória");
+    } else {
+      const d = new Date(projeto.dataInicio as any);
+      if (isNaN(d.getTime())) {
+        errors.push("Data de início inválida");
+      }
     }
 
     if (projeto.dataInicio && projeto.dataFim) {

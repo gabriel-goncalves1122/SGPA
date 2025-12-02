@@ -17,7 +17,9 @@ export default function Projetos() {
   const [showModal, setShowModal] = useState(false);
   const [showEquipeModal, setShowEquipeModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [selectedProjetoId, setSelectedProjetoId] = useState<string | null>(null);
+  const [selectedProjetoId, setSelectedProjetoId] = useState<string | null>(
+    null
+  );
   const [selectedAlunos, setSelectedAlunos] = useState<string[]>([]);
   const [formData, setFormData] = useState<Omit<Projeto, "id">>({
     titulo: "",
@@ -103,7 +105,10 @@ export default function Projetos() {
     setShowEquipeModal(true);
   };
 
-  const handleAddAlunoToEquipe = async (alunoId: string, papel: "Participante" | "Líder") => {
+  const handleAddAlunoToEquipe = async (
+    alunoId: string,
+    papel: "Participante" | "Líder"
+  ) => {
     if (!selectedProjetoId) return;
     try {
       await equipesService.create({
@@ -154,10 +159,12 @@ export default function Projetos() {
     return aluno ? aluno.nome : "Desconhecido";
   };
 
-  const formatDate = (date: any) => {
+  const formatDate = (date: any): string => {
     if (!date) return "";
-    const d = new Date(date);
-    return d.toISOString().split("T")[0];
+
+    const d = date instanceof Date ? date : new Date(date);
+
+    return isNaN(d.getTime()) ? "" : d.toISOString().split("T")[0];
   };
 
   return (
@@ -187,14 +194,21 @@ export default function Projetos() {
                 <div key={projeto.id} className="projeto-card">
                   <div className="projeto-header">
                     <h3>{projeto.titulo}</h3>
-                    <span className={`status-badge ${projeto.status?.toLowerCase().replace(" ", "-")}`}>
+                    <span
+                      className={`status-badge ${projeto.status
+                        ?.toLowerCase()
+                        .replace(" ", "-")}`}
+                    >
                       {projeto.status}
                     </span>
                   </div>
-                  <p className="projeto-descricao">{projeto.descricao || "Sem descrição"}</p>
+                  <p className="projeto-descricao">
+                    {projeto.descricao || "Sem descrição"}
+                  </p>
                   <div className="projeto-info">
                     <div className="info-item">
-                      <strong>Orientador:</strong> {getProfessorNome(projeto.orientador)}
+                      <strong>Orientador:</strong>{" "}
+                      {getProfessorNome(projeto.orientador)}
                     </div>
                     <div className="info-item">
                       <strong>Início:</strong> {formatDate(projeto.dataInicio)}
@@ -209,13 +223,22 @@ export default function Projetos() {
                     </div>
                   </div>
                   <div className="projeto-actions">
-                    <button className="btn-equipe" onClick={() => handleManageEquipe(projeto)}>
+                    <button
+                      className="btn-equipe"
+                      onClick={() => handleManageEquipe(projeto)}
+                    >
                       Gerenciar Equipe
                     </button>
-                    <button className="btn-edit" onClick={() => handleEdit(projeto)}>
+                    <button
+                      className="btn-edit"
+                      onClick={() => handleEdit(projeto)}
+                    >
                       Editar
                     </button>
-                    <button className="btn-delete" onClick={() => handleDelete(projeto.id!)}>
+                    <button
+                      className="btn-delete"
+                      onClick={() => handleDelete(projeto.id!)}
+                    >
                       Excluir
                     </button>
                   </div>
@@ -235,7 +258,9 @@ export default function Projetos() {
                   <input
                     type="text"
                     value={formData.titulo}
-                    onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, titulo: e.target.value })
+                    }
                     required
                     maxLength={80}
                   />
@@ -245,7 +270,9 @@ export default function Projetos() {
                   <label>Descrição</label>
                   <textarea
                     value={formData.descricao}
-                    onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, descricao: e.target.value })
+                    }
                     maxLength={500}
                     rows={4}
                   />
@@ -255,7 +282,9 @@ export default function Projetos() {
                   <label>Orientador *</label>
                   <select
                     value={formData.orientador}
-                    onChange={(e) => setFormData({ ...formData, orientador: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, orientador: e.target.value })
+                    }
                     required
                   >
                     <option value="">Selecione um professor</option>
@@ -272,7 +301,12 @@ export default function Projetos() {
                   <input
                     type="date"
                     value={formatDate(formData.dataInicio)}
-                    onChange={(e) => setFormData({ ...formData, dataInicio: new Date(e.target.value) })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        dataInicio: new Date(e.target.value),
+                      })
+                    }
                     required
                   />
                 </div>
@@ -285,7 +319,9 @@ export default function Projetos() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        dataFim: e.target.value ? new Date(e.target.value) : undefined,
+                        dataFim: e.target.value
+                          ? new Date(e.target.value)
+                          : undefined,
                       })
                     }
                   />
@@ -295,7 +331,9 @@ export default function Projetos() {
                   <label>Status *</label>
                   <select
                     value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, status: e.target.value })
+                    }
                     required
                   >
                     <option value="Em andamento">Em andamento</option>
@@ -343,13 +381,17 @@ export default function Projetos() {
                       <div>
                         <button
                           className="btn-small"
-                          onClick={() => handleAddAlunoToEquipe(aluno.id!, "Participante")}
+                          onClick={() =>
+                            handleAddAlunoToEquipe(aluno.id!, "Participante")
+                          }
                         >
                           + Participante
                         </button>
                         <button
                           className="btn-small btn-leader"
-                          onClick={() => handleAddAlunoToEquipe(aluno.id!, "Líder")}
+                          onClick={() =>
+                            handleAddAlunoToEquipe(aluno.id!, "Líder")
+                          }
                         >
                           + Líder
                         </button>
