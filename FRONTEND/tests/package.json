@@ -8,7 +8,8 @@
     "test:login": "node --experimental-modules tests/login.test.js",
     "test:dashboard": "node --experimental-modules tests/dashboard.test.js",
     "test:alunos": "node --experimental-modules tests/alunos.test.js",
-    "test:all": "node --experimental-modules test-runner.js"
+    "test:all": "node --experimental-modules test-runner.js",
+    "test:e2e": "node tests/test-runner.js"
   },
   "dependencies": {
     "selenium-webdriver": "^4.16.0",
