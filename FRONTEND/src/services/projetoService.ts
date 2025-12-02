@@ -18,7 +18,16 @@ export const projetoService = {
   },
 
   update: async (id: string, projeto: Partial<Projeto>): Promise<Projeto> => {
-    const response = await api.put(`/projetos/${id}`, projeto);
+    const payload = {
+      titulo: projeto.titulo,
+      descricao: projeto.descricao,
+      orientador: projeto.orientador,
+      dataInicio: projeto.dataInicio,
+      dataFim: projeto.dataFim,
+      status: projeto.status,
+      alunos: projeto.alunos,
+    };
+    const response = await api.put(`/projetos/${id}`, payload);
     return response.data;
   },
 

@@ -6,6 +6,8 @@ export interface Projeto {
   orientador: string;
   dataInicio?: Date; // ← opcional aqui
   dataFim?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
   status?: string;
   alunos?: string[];
 }

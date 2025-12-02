@@ -14,8 +14,6 @@ const Navbar = () => {
     { path: "/dashboard", label: "Início", icon: "🏠" },
     { path: "/pessoas", label: "Pessoas", icon: "👥" }, // ⬅️ substitui Alunos/Professores
     { path: "/projetos", label: "Projetos", icon: "📁" },
-    { path: "/tarefas", label: "Tarefas", icon: "✅" },
-    { path: "/entregas", label: "Entregas", icon: "📤" },
     { path: "/relatorios", label: "Relatórios", icon: "📊" },
   ];
   return (

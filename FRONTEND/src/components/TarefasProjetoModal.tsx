@@ -1,7 +1,8 @@
 // components/TarefasProjetoModal.tsx
-import React from "react";
+import React, { useState } from "react";
 import { tarefaService } from "../services/tarefaService";
 import type { Tarefa } from "../types/tarefa";
+import type { Aluno } from "../types/aluno";
 import type { Projeto } from "../types/projeto";
 import "./TarefasProjetoModal.css";
 
@@ -10,7 +11,8 @@ interface TarefasProjetoModalProps {
   tarefas: Tarefa[];
   isVisible: boolean;
   onClose: () => void;
-  onTarefaCriada: () => void; // para recarregar as tarefas
+  onTarefaCriada: () => void;
+  alunosDoProjeto: Aluno[]; // 👈 novos alunos filtrados
 }
 
 export default function TarefasProjetoModal({
@@ -19,25 +21,43 @@ export default function TarefasProjetoModal({
   isVisible,
   onClose,
   onTarefaCriada,
+  alunosDoProjeto,
 }: TarefasProjetoModalProps) {
-  if (!isVisible) return null;
+  const [showForm, setShowForm] = useState(false);
+  const [descricao, setDescricao] = useState("");
+  const [responsaveis, setResponsaveis] = useState<string[]>([]);
+  const [status, setStatus] = useState<
+    "Pendente" | "Em andamento" | "Concluída"
+  >("Pendente");
 
   const handleCriarTarefa = async () => {
-    if (!projeto.id) return;
-
-    const novaTarefa = {
-      descricao: `Nova tarefa - ${projeto.titulo}`,
-      responsaveis: [],
-      orientador: projeto.orientador,
-      idProjeto: projeto.id,
-      dataInicio: new Date(),
-      status: "Pendente" as const,
-    };
+    if (!descricao.trim()) {
+      alert("Descrição é obrigatória");
+      return;
+    }
+    if (responsaveis.length === 0) {
+      alert("Selecione pelo menos um responsável");
+      return;
+    }
 
     try {
+      const novaTarefa = {
+        descricao: descricao.trim(),
+        responsaveis,
+        orientador: projeto.orientador,
+        idProjeto: projeto.id!,
+        dataInicio: new Date(),
+        status,
+      };
+
       await tarefaService.create(novaTarefa);
       alert("✅ Tarefa criada com sucesso!");
-      onTarefaCriada(); // notifica o pai para atualizar a lista
+      onTarefaCriada(); // recarrega as tarefas
+      // Resetar formulário
+      setDescricao("");
+      setResponsaveis([]);
+      setStatus("Pendente");
+      setShowForm(false);
     } catch (error) {
       console.error("Erro ao criar tarefa:", error);
       alert("❌ Erro ao criar tarefa");
@@ -50,6 +70,8 @@ export default function TarefasProjetoModal({
     return isNaN(d.getTime()) ? "" : d.toISOString().split("T")[0];
   };
 
+  if (!isVisible) return null;
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -61,7 +83,90 @@ export default function TarefasProjetoModal({
         </div>
 
         <div className="modal-body">
-          {tarefas.length === 0 ? (
+          {/* Botão para abrir formulário */}
+          {!showForm && (
+            <button
+              className="btn-primary btn-add-tarefa"
+              onClick={() => setShowForm(true)}
+            >
+              + Nova Tarefa
+            </button>
+          )}
+
+          {/* Formulário de criação */}
+          {showForm && (
+            <div className="tarefa-form">
+              <h3>Nova Tarefa</h3>
+              <div className="form-row">
+                <label>Descrição *</label>
+                <textarea
+                  value={descricao}
+                  onChange={(e) => setDescricao(e.target.value)}
+                  maxLength={200}
+                  rows={2}
+                  placeholder="Descreva a tarefa..."
+                />
+              </div>
+
+              <div className="form-row">
+                <label>Responsáveis *</label>
+                <div className="checkbox-group">
+                  {alunosDoProjeto.map((aluno) => (
+                    <label key={aluno.id} className="checkbox-item">
+                      <input
+                        type="checkbox"
+                        value={aluno.id!}
+                        checked={responsaveis.includes(aluno.id!)}
+                        onChange={(e) => {
+                          const { value, checked } = e.target;
+                          if (checked) {
+                            setResponsaveis([...responsaveis, value]);
+                          } else {
+                            setResponsaveis(
+                              responsaveis.filter((id) => id !== value)
+                            );
+                          }
+                        }}
+                      />
+                      <span>{aluno.nome}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-row">
+                <label>Status</label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as any)}
+                >
+                  <option value="Pendente">Pendente</option>
+                  <option value="Em andamento">Em andamento</option>
+                  <option value="Concluída">Concluída</option>
+                </select>
+              </div>
+
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowForm(false)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={handleCriarTarefa}
+                >
+                  Criar Tarefa
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Lista de tarefas */}
+          {tarefas.length === 0 && !showForm ? (
             <p>Nenhuma tarefa cadastrada para este projeto.</p>
           ) : (
             <table className="tarefas-table">
@@ -77,11 +182,7 @@ export default function TarefasProjetoModal({
                 {tarefas.map((tarefa) => (
                   <tr key={tarefa.id}>
                     <td>{tarefa.descricao || "Sem descrição"}</td>
-                    <td>
-                      {tarefa.responsaveis?.length > 0
-                        ? tarefa.responsaveis.length
-                        : "Nenhum"}
-                    </td>
+                    <td>{tarefa.responsaveis?.length || 0}</td>
                     <td>
                       <span
                         className={`status-badge ${
@@ -97,15 +198,6 @@ export default function TarefasProjetoModal({
               </tbody>
             </table>
           )}
-        </div>
-
-        <div className="modal-actions">
-          <button className="btn-secondary" onClick={onClose}>
-            Fechar
-          </button>
-          <button className="btn-primary" onClick={handleCriarTarefa}>
-            + Nova Tarefa
-          </button>
         </div>
       </div>
     </div>

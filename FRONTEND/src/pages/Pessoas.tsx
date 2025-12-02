@@ -4,7 +4,6 @@ import { alunoService } from "../services/alunoService";
 import { professorService } from "../services/professorService";
 import type { Aluno } from "../types/aluno";
 import type { Professor } from "../types/professor";
-import Layout from "../components/Layout";
 import "./Pessoas.css";
 
 type Pessoa = Aluno | Professor;
@@ -147,259 +146,245 @@ export default function Pessoas() {
   const total = pessoas.length;
   const resultados = filteredPessoas.length;
 
-  if (loading) {
-    return (
-      <Layout>
-        <div className="pessoas-container">
-          <div className="loading-card">Carregando...</div>
-        </div>
-      </Layout>
-    );
-  }
-
   return (
-    <Layout>
-      <div className="pessoas-container">
-        {/* Cabeçalho */}
-        <div className="pessoas-header">
-          <div>
-            <h1>👥 Gerenciamento de Pessoas</h1>
-            <p className="subtitle">Alunos e professores do sistema SGPA</p>
-          </div>
-          <div className="header-actions">
-            <div className="tipo-toggle">
-              <button
-                className={tipo === "aluno" ? "active" : ""}
-                onClick={() => setTipo("aluno")}
-              >
-                Alunos
-              </button>
-              <button
-                className={tipo === "professor" ? "active" : ""}
-                onClick={() => setTipo("professor")}
-              >
-                Professores
-              </button>
-            </div>
-            <button className="btn-primary" onClick={() => handleOpenModal()}>
-              + Novo {isAluno ? "Aluno" : "Professor"}
+    <div className="pessoas-container">
+      {/* Cabeçalho */}
+      <div className="pessoas-header">
+        <div>
+          <h1>👥 Gerenciamento de Pessoas</h1>
+          <p className="subtitle">Alunos e professores do sistema SGPA</p>
+        </div>
+        <div className="header-actions">
+          <div className="tipo-toggle">
+            <button
+              className={tipo === "aluno" ? "active" : ""}
+              onClick={() => setTipo("aluno")}
+            >
+              Alunos
+            </button>
+            <button
+              className={tipo === "professor" ? "active" : ""}
+              onClick={() => setTipo("professor")}
+            >
+              Professores
             </button>
           </div>
+          <button className="btn-primary" onClick={() => handleOpenModal()}>
+            + Novo {isAluno ? "Aluno" : "Professor"}
+          </button>
         </div>
+      </div>
 
-        {/* Erro */}
-        {error && <div className="error-banner">{error}</div>}
+      {/* Erro */}
+      {error && <div className="error-banner">{error}</div>}
 
-        {/* Busca + Métricas */}
-        <div className="controls-row">
-          <div className="search-wrapper">
-            <div className="search-container">
-              <span className="search-icon">🔍</span>
-              <input
-                type="text"
-                placeholder={`Buscar por nome, email, ${
-                  isAluno ? "matrícula/curso" : "SIAPE/departamento"
-                }...`}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="search-input"
-              />
-            </div>
-          </div>
-
-          <div className="stats-wrapper">
-            <div className="stat-card total">
-              <div className="stat-value">{total}</div>
-              <div className="stat-label">Total</div>
-            </div>
-            <div className="stat-card filtered">
-              <div className="stat-value">{resultados}</div>
-              <div className="stat-label">Resultados</div>
-            </div>
+      {/* Busca + Métricas */}
+      <div className="controls-row">
+        <div className="search-wrapper">
+          <div className="search-container">
+            <span className="search-icon">🔍</span>
+            <input
+              type="text"
+              placeholder={`Buscar por nome, email, ${
+                isAluno ? "matrícula/curso" : "SIAPE/departamento"
+              }...`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
           </div>
         </div>
 
-        {/* Tabela */}
-        <div className="table-wrapper">
-          {resultados === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">👥</div>
-              <h3>Nenhuma pessoa encontrada</h3>
-              <p>Tente ajustar sua busca ou cadastre uma nova.</p>
-            </div>
-          ) : (
-            <table className="pessoas-table">
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>{isAluno ? "Matrícula" : "SIAPE"}</th>
-                  <th>Email</th>
-                  <th>{isAluno ? "Curso" : "Departamento"}</th>
-                  {isAluno && <th>Telefone</th>}
-                  <th className="actions-header">Ações</th>
+        <div className="stats-wrapper">
+          <div className="stat-card total">
+            <div className="stat-value">{total}</div>
+            <div className="stat-label">Total</div>
+          </div>
+          <div className="stat-card filtered">
+            <div className="stat-value">{resultados}</div>
+            <div className="stat-label">Resultados</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabela */}
+      <div className="table-wrapper">
+        {resultados === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">👥</div>
+            <h3>Nenhuma pessoa encontrada</h3>
+            <p>Tente ajustar sua busca ou cadastre uma nova.</p>
+          </div>
+        ) : (
+          <table className="pessoas-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>{isAluno ? "Matrícula" : "SIAPE"}</th>
+                <th>Email</th>
+                <th>{isAluno ? "Curso" : "Departamento"}</th>
+                {isAluno && <th>Telefone</th>}
+                <th className="actions-header">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPessoas.map((pessoa) => (
+                <tr key={pessoa.id}>
+                  <td>{pessoa.nome}</td>
+                  <td>
+                    {isAluno
+                      ? (pessoa as Aluno).matricula
+                      : (pessoa as Professor).siape}
+                  </td>
+                  <td>{pessoa.email}</td>
+                  <td>
+                    {isAluno
+                      ? (pessoa as Aluno).curso
+                      : (pessoa as Professor).departamento}
+                  </td>
+                  {isAluno && <td>{(pessoa as Aluno).telefone}</td>}
+                  <td className="actions-cell">
+                    <button
+                      className="action-btn edit"
+                      onClick={() => handleOpenModal(pessoa)}
+                      title="Editar"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      className="action-btn delete"
+                      onClick={() => handleDelete(pessoa.id!)}
+                      title="Excluir"
+                    >
+                      🗑️
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredPessoas.map((pessoa) => (
-                  <tr key={pessoa.id}>
-                    <td>{pessoa.nome}</td>
-                    <td>
-                      {isAluno
-                        ? (pessoa as Aluno).matricula
-                        : (pessoa as Professor).siape}
-                    </td>
-                    <td>{pessoa.email}</td>
-                    <td>
-                      {isAluno
-                        ? (pessoa as Aluno).curso
-                        : (pessoa as Professor).departamento}
-                    </td>
-                    {isAluno && <td>{(pessoa as Aluno).telefone}</td>}
-                    <td className="actions-cell">
-                      <button
-                        className="action-btn edit"
-                        onClick={() => handleOpenModal(pessoa)}
-                        title="Editar"
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        className="action-btn delete"
-                        onClick={() => handleDelete(pessoa.id!)}
-                        title="Excluir"
-                      >
-                        🗑️
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-
-        {/* Modal */}
-        {showModal && (
-          <div className="modal-overlay" onClick={handleCloseModal}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2>
-                  {editingPessoa
-                    ? `Editar ${isAluno ? "Aluno" : "Professor"}`
-                    : `Cadastrar Novo ${isAluno ? "Aluno" : "Professor"}`}
-                </h2>
-                <button className="close-btn" onClick={handleCloseModal}>
-                  ✕
-                </button>
-              </div>
-              <form onSubmit={handleSubmit} className="modal-form">
-                <div className="form-row">
-                  <label>Nome Completo *</label>
-                  <input
-                    type="text"
-                    value={formData.nome || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, nome: e.target.value })
-                    }
-                    required
-                    maxLength={50}
-                    placeholder="Ex: João Silva"
-                  />
-                </div>
-
-                <div className="form-row">
-                  <label>{isAluno ? "Matrícula *" : "SIAPE *"}</label>
-                  <input
-                    type="text"
-                    value={
-                      (isAluno ? formData.matricula : formData.siape) || ""
-                    }
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        ...(isAluno
-                          ? { matricula: e.target.value }
-                          : { siape: e.target.value }),
-                      })
-                    }
-                    required
-                    maxLength={10}
-                    placeholder={isAluno ? "Ex: 2021001" : "Ex: 1234567"}
-                  />
-                </div>
-
-                <div className="form-row">
-                  <label>Email Institucional *</label>
-                  <input
-                    type="email"
-                    value={formData.email || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    required
-                    maxLength={50}
-                    placeholder={
-                      isAluno ? "aluno@unifei.edu.br" : "prof@unifei.edu.br"
-                    }
-                  />
-                </div>
-
-                <div className="form-row">
-                  <label>{isAluno ? "Curso *" : "Departamento *"}</label>
-                  <input
-                    type="text"
-                    value={
-                      (isAluno ? formData.curso : formData.departamento) || ""
-                    }
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        ...(isAluno
-                          ? { curso: e.target.value }
-                          : { departamento: e.target.value }),
-                      })
-                    }
-                    required
-                    maxLength={50}
-                    placeholder={
-                      isAluno ? "Engenharia de Software" : "Computação"
-                    }
-                  />
-                </div>
-
-                {isAluno && (
-                  <div className="form-row">
-                    <label>Telefone *</label>
-                    <input
-                      type="tel"
-                      value={formData.telefone || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, telefone: e.target.value })
-                      }
-                      required
-                      maxLength={15}
-                      placeholder="(35) 99999-9999"
-                    />
-                  </div>
-                )}
-
-                <div className="modal-actions">
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={handleCloseModal}
-                  >
-                    Cancelar
-                  </button>
-                  <button type="submit" className="btn-primary">
-                    {editingPessoa ? "Atualizar" : "Cadastrar"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
-    </Layout>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="modal-overlay" onClick={handleCloseModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>
+                {editingPessoa
+                  ? `Editar ${isAluno ? "Aluno" : "Professor"}`
+                  : `Cadastrar Novo ${isAluno ? "Aluno" : "Professor"}`}
+              </h2>
+              <button className="close-btn" onClick={handleCloseModal}>
+                ✕
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="modal-form">
+              <div className="form-row">
+                <label>Nome Completo *</label>
+                <input
+                  type="text"
+                  value={formData.nome || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, nome: e.target.value })
+                  }
+                  required
+                  maxLength={50}
+                  placeholder="Ex: João Silva"
+                />
+              </div>
+
+              <div className="form-row">
+                <label>{isAluno ? "Matrícula *" : "SIAPE *"}</label>
+                <input
+                  type="text"
+                  value={(isAluno ? formData.matricula : formData.siape) || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      ...(isAluno
+                        ? { matricula: e.target.value }
+                        : { siape: e.target.value }),
+                    })
+                  }
+                  required
+                  maxLength={10}
+                  placeholder={isAluno ? "Ex: 2021001" : "Ex: 1234567"}
+                />
+              </div>
+
+              <div className="form-row">
+                <label>Email Institucional *</label>
+                <input
+                  type="email"
+                  value={formData.email || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  required
+                  maxLength={50}
+                  placeholder={
+                    isAluno ? "aluno@unifei.edu.br" : "prof@unifei.edu.br"
+                  }
+                />
+              </div>
+
+              <div className="form-row">
+                <label>{isAluno ? "Curso *" : "Departamento *"}</label>
+                <input
+                  type="text"
+                  value={
+                    (isAluno ? formData.curso : formData.departamento) || ""
+                  }
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      ...(isAluno
+                        ? { curso: e.target.value }
+                        : { departamento: e.target.value }),
+                    })
+                  }
+                  required
+                  maxLength={50}
+                  placeholder={
+                    isAluno ? "Engenharia de Software" : "Computação"
+                  }
+                />
+              </div>
+
+              {isAluno && (
+                <div className="form-row">
+                  <label>Telefone *</label>
+                  <input
+                    type="tel"
+                    value={formData.telefone || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, telefone: e.target.value })
+                    }
+                    required
+                    maxLength={15}
+                    placeholder="(35) 99999-9999"
+                  />
+                </div>
+              )}
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={handleCloseModal}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-primary">
+                  {editingPessoa ? "Atualizar" : "Cadastrar"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

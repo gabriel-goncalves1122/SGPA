@@ -119,3 +119,50 @@
 .btn-primary:hover {
   background: #3a56d4;
 }
+
+/* Botão de nova tarefa */
+.btn-add-tarefa {
+  margin-bottom: 1.5rem;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+}
+
+/* Formulário embutido */
+.tarefa-form {
+  background: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.tarefa-form h3 {
+  margin-top: 0;
+  color: #1f2937;
+  font-size: 1.2rem;
+}
+
+.form-row {
+  margin-bottom: 1rem;
+}
+.form-row label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+  color: #334155;
+}
+.form-row textarea,
+.form-row select {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}

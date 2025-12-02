@@ -175,10 +175,10 @@ export default function Tarefas() {
               <option value="Concluída">Concluída</option>
             </select>
             <button
-              className="btn-primary"
-              onClick={() => {
-                resetForm();
-                setShowModal(true);
+              className="btn-tarefas"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCriarTarefa(projeto);
               }}
             >
               + Nova Tarefa

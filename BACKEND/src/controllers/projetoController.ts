@@ -203,7 +203,9 @@ export const addProjeto = async (req: Request, res: Response) => {
 };
 
 // Atualizar projeto
+// Atualizar projeto
 export const updateProjeto = async (req: Request, res: Response) => {
+  console.log("Payload recebido:", req.body);
   try {
     const { id } = req.params;
     const novosDados = req.body as Partial<Projeto>;
@@ -229,7 +231,7 @@ export const updateProjeto = async (req: Request, res: Response) => {
         .json({ error: "Orientador não pode ser alterado" });
     }
 
-    // Validar datas
+    // Validar e converter datas
     const dataInicio = parseDate(novosDados.dataInicio);
     const dataFim = parseDate(novosDados.dataFim);
 
@@ -245,12 +247,19 @@ export const updateProjeto = async (req: Request, res: Response) => {
       return res.status(400).json({ errors });
     }
 
-    await docRef.update({
-      ...novosDados,
-      dataInicio,
-      dataFim,
+    // ✅ Salvar apenas os dados convertidos
+    const payloadParaSalvar = {
+      titulo: merged.titulo,
+      descricao: merged.descricao,
+      orientador: merged.orientador,
+      dataInicio: merged.dataInicio,
+      dataFim: merged.dataFim,
+      status: merged.status,
+      alunos: merged.alunos,
       updatedAt: new Date(),
-    });
+    };
+
+    await docRef.update(payloadParaSalvar);
 
     res.status(200).json({ id, ...merged });
   } catch (error) {
