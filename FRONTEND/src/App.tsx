@@ -2,8 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Projetos from "./pages/Projetos";
-import Tarefas from "./pages/Tarefas";
-import Entregas from "./pages/Entregas";
 import Relatorios from "./pages/Relatorios";
 import Layout from "./components/Layout";
 import Pessoas from "./pages/Pessoas";
@@ -35,22 +33,6 @@ const App = () => {
             element={
               <PrivateRoute>
                 <Projetos />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/tarefas"
-            element={
-              <PrivateRoute>
-                <Tarefas />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/entregas"
-            element={
-              <PrivateRoute>
-                <Entregas />
               </PrivateRoute>
             }
           />
