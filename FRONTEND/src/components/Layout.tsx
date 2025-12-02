@@ -1,15 +1,12 @@
-import Navbar from "../components/Navbar";
-import "./Layout.css";
+// components/Layout.tsx
+import Navbar from "./Navbar";
+import "./Layout.css"; // se tiver
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-const Layout = ({ children }: LayoutProps) => {
+const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="layout">
       <Navbar />
-      <main className="layout-content">{children}</main>
+      <main className="main-content">{children}</main>
     </div>
   );
 };
