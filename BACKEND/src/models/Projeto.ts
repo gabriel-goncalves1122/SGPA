@@ -1,14 +1,25 @@
+// models/Projeto.ts
 export interface Projeto {
   id?: string;
   titulo: string;
   descricao?: string;
-  orientador: string; // professor document id
+  orientador: string; // agora obrigatório
   dataInicio: Date;
   dataFim?: Date;
   status?: string;
-  alunos?: string[]; // array de aluno document ids
+  alunos?: string[]; // array de IDs de alunos
+  entrega?: Entrega; // novo campo
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+// Defina o tipo Entrega (ajuste conforme seu modelo real)
+export interface Entrega {
+  id: string;
+  dataEntrega: Date;
+  arquivoUrl: string;
+  observacoes?: string;
+  avaliacao?: number; // 0-5 ou null
 }
 
 export class ProjetoValidator {
@@ -23,18 +34,13 @@ export class ProjetoValidator {
       errors.push("Descrição deve ter no máximo 500 caracteres");
     }
 
-    if (!projeto.orientador) {
+    // ✅ orientador agora é obrigatório
+    if (!projeto.orientador || typeof projeto.orientador !== "string") {
       errors.push("Orientador (id do professor) é obrigatório");
     }
 
-    // Em ProjetoValidator
     if (!projeto.dataInicio) {
       errors.push("Data de início é obrigatória");
-    } else {
-      const d = new Date(projeto.dataInicio as any);
-      if (isNaN(d.getTime())) {
-        errors.push("Data de início inválida");
-      }
     }
 
     if (projeto.dataInicio && projeto.dataFim) {

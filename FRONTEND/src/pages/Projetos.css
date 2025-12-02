@@ -203,3 +203,89 @@
   border-radius: 8px;
   grid-column: 1 / -1;
 }
+
+/* --- Novo: Estilos para resumo de tarefas --- */
+.tarefas-resumo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.tarefa-status {
+  padding: 0.2rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+}
+
+.tarefa-status.pendente {
+  background-color: #dc3545; /* vermelho */
+}
+.tarefa-status.andamento {
+  background-color: #ffc107; /* amarelo */
+}
+.tarefa-status.concluida {
+  background-color: #28a745; /* verde */
+}
+
+/* Botão para ver tarefas */
+.btn-tarefas {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.btn-tarefas:hover {
+  background-color: #5a6268;
+}
+
+/* Estilos para tabela de tarefas no modal */
+.tarefas-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.tarefas-table th,
+.tarefas-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.tarefas-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+}
+
+.status-badge.pendente {
+  background-color: #dc3545;
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+.status-badge.em-andamento {
+  background-color: #ffc107;
+  color: #212529;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+.status-badge.concluída {
+  background-color: #28a745;
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}

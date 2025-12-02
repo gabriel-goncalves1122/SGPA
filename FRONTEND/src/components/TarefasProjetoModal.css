@@ -1,0 +1,121 @@
+/* components/TarefasProjetoModal.css */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+.modal-header h2 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.4rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #94a3b8;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+.close-btn:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.modal-body {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.tarefas-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+.tarefas-table th,
+.tarefas-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+.tarefas-table th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #495057;
+}
+
+.status-badge {
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.status-badge.pendente {
+  background-color: #dc3545;
+  color: white;
+}
+.status-badge.em-andamento {
+  background-color: #ffc107;
+  color: #212529;
+}
+.status-badge.concluída {
+  background-color: #28a745;
+  color: white;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  padding: 0 1.5rem 1.5rem;
+}
+
+.btn-secondary,
+.btn-primary {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-secondary {
+  background: #e2e8f0;
+  color: #475569;
+}
+.btn-primary {
+  background: #4361ee;
+  color: white;
+}
+.btn-secondary:hover {
+  background: #cbd5e1;
+}
+.btn-primary:hover {
+  background: #3a56d4;
+}
