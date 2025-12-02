@@ -3,6 +3,7 @@ import type { Request, Response } from "express";
 import * as admin from "firebase-admin";
 import type { Projeto } from "../models/Projeto";
 import { ProjetoValidator } from "../models/Projeto";
+import type { Vinculo } from "../models/Vinculo";
 
 const db = admin.firestore();
 const projetosCollection = db.collection("projetos");
@@ -156,11 +157,9 @@ export const addProjeto = async (req: Request, res: Response) => {
   try {
     const payload = req.body as Partial<Projeto>;
 
-    // Validar datas
     const dataInicio = parseDate(payload.dataInicio);
     const dataFim = parseDate(payload.dataFim);
 
-    // Forçar uso das datas convertidas na validação
     const payloadValidacao = {
       ...payload,
       dataInicio,
@@ -172,7 +171,6 @@ export const addProjeto = async (req: Request, res: Response) => {
       return res.status(400).json({ errors });
     }
 
-    // Verificar orientador
     const orientadorDoc = await professoresCollection
       .doc(payload.orientador as string)
       .get();
@@ -185,24 +183,42 @@ export const addProjeto = async (req: Request, res: Response) => {
     const projeto: Partial<Projeto> = {
       titulo: payload.titulo as string,
       descricao: payload.descricao,
-      orientador: payload.orientador as string, // obrigatório
+      orientador: payload.orientador as string,
       dataInicio: dataInicio!,
       dataFim: dataFim,
       status: payload.status || "Em andamento",
       alunos: payload.alunos || [],
       createdAt: new Date(),
-      // entrega não é definida na criação
     };
 
     const docRef = await projetosCollection.add(projeto);
-    res.status(201).json({ id: docRef.id, ...projeto });
+    const projetoId = docRef.id;
+
+    // Criar vínculos
+    if (Array.isArray(payload.alunos) && payload.alunos.length > 0) {
+      const batch = db.batch();
+      for (const alunoId of payload.alunos) {
+        if (typeof alunoId === "string" && alunoId.trim() !== "") {
+          const vinculo = {
+            idAluno: alunoId,
+            idProjeto: projetoId,
+            papel: "Participante" as const,
+            createdAt: new Date(),
+          };
+          batch.set(vinculosCollection.doc(), vinculo);
+        }
+      }
+      await batch.commit();
+    }
+
+    // ✅ FALTOU ESTA LINHA!
+    return res.status(201).json({ id: projetoId, ...projeto });
   } catch (error) {
     console.error("Erro ao adicionar projeto:", error);
-    res.status(500).json({ error: "Erro ao adicionar projeto" });
+    return res.status(500).json({ error: "Erro ao adicionar projeto" });
   }
 };
 
-// Atualizar projeto
 // Atualizar projeto
 export const updateProjeto = async (req: Request, res: Response) => {
   console.log("Payload recebido:", req.body);

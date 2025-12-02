@@ -1,16 +1,19 @@
 // components/CriarProjetoModal.tsx
 import React, { useState } from "react";
 import ProjetoForm from "./ProjetoForm";
-import type { Professor } from "../types/professor";
+import type { Professor } from "../types/professor"; // ajuste o caminho se necessário
+import type { Aluno } from "../types/aluno"; // 👈 necessário
 import { projetoService } from "../services/projetoService";
 import { formToProjeto } from "../types/ProjetoForm";
 import type { ProjetoForm as ProjetoFormType } from "../types/ProjetoForm";
+import "./ProjetoForm.css";
 
 interface CriarProjetoModalProps {
   isOpen: boolean;
   onClose: () => void;
   onProjetoCriado: () => void;
   professores: Professor[];
+  alunos: Aluno[]; // 👈 necessário
 }
 
 export default function CriarProjetoModal({
@@ -18,6 +21,7 @@ export default function CriarProjetoModal({
   onClose,
   onProjetoCriado,
   professores,
+  alunos,
 }: CriarProjetoModalProps) {
   const [formData, setFormData] = useState<ProjetoFormType>({
     titulo: "",
@@ -31,6 +35,15 @@ export default function CriarProjetoModal({
 
   const handleChange = (field: keyof ProjetoFormType, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleAlunoToggle = (alunoId: string) => {
+    setFormData((prev) => {
+      const novosAlunos = prev.alunos.includes(alunoId)
+        ? prev.alunos.filter((id) => id !== alunoId)
+        : [...prev.alunos, alunoId];
+      return { ...prev, alunos: novosAlunos };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,13 +66,46 @@ export default function CriarProjetoModal({
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <h2>Novo Projeto</h2>
+
         <form onSubmit={handleSubmit}>
           <ProjetoForm
             formData={formData}
             professores={professores}
             onChange={handleChange}
-            isEditing={false}
+            isEditing={false} // ← pois é "Criar", não "Editar"
           />
+
+          {
+            <div className="form-group">
+              <label>Alunos já selecionados: {formData.alunos.length}</label>
+              <div
+                style={{
+                  minHeight: "1.5rem",
+                  fontSize: "0.9rem",
+                  color: "#666",
+                }}
+              >
+                {formData.alunos.length === 0 ? "Nenhum aluno selecionado" : ""}
+              </div>
+            </div>
+          }
+          {/* Seleção de alunos */}
+          <div className="form-group">
+            <label>Alunos do Projeto</label>
+            <div className="checkbox-group">
+              {alunos.map((aluno) => (
+                <label key={aluno.id} className="checkbox-item">
+                  <input
+                    type="checkbox"
+                    checked={formData.alunos.includes(aluno.id!)}
+                    onChange={() => handleAlunoToggle(aluno.id!)}
+                  />
+                  <span>{aluno.nome}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
           <div className="modal-actions">
             <button type="button" className="btn-secondary" onClick={onClose}>
               Cancelar

@@ -110,7 +110,6 @@ export default function Projetos() {
           + Novo Projeto
         </button>
       </div>
-
       {loading ? (
         <div className="loading">Carregando...</div>
       ) : (
@@ -212,15 +211,14 @@ export default function Projetos() {
           )}
         </div>
       )}
-
       {/* Modais */}
       <CriarProjetoModal
         isOpen={showCriarModal}
         onClose={() => setShowCriarModal(false)}
         onProjetoCriado={loadData}
         professores={professores}
+        alunos={alunos} // 👈 passe a lista completa de alunos
       />
-
       {projetoParaEditar && (
         <EditarProjetoModal
           isOpen={true}
@@ -230,7 +228,6 @@ export default function Projetos() {
           professores={professores}
         />
       )}
-
       {projetoSelecionado && (
         <TarefasProjetoModal
           projeto={projetoSelecionado}
